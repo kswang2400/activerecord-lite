@@ -19,6 +19,15 @@ class SQLObject
   end
 
   def self.finalize!
+    self.columns.each do |name|
+      define_method(name) do
+        self.attributes[name]
+      end
+
+      define_method("#{name}=") do |value|
+        self.attributes[name] = value
+      end
+    end
   end
 
   def self.table_name=(table_name)
@@ -26,20 +35,28 @@ class SQLObject
   end
 
   def self.table_name
-    @table_name || "#{self.to_s.downcase}s"
+    @table_name || self.name.underscore.pluralize
   end
 
   def self.all
-    require 'rails'
-    all_rows = DBConnection.execute(<<-SQL)
-      SELECT * FROM "#{table_name}"
+    # require 'rails'
+    # all_rows = DBConnection.execute(<<-SQL)
+    #   SELECT * FROM "#{table_name}"
+    # SQL
+
+    # all_rows.each do |hashes|
+    #   hashes.symbolize_keys!
+    # end
+
+    # self.parse_all(all_rows)
+    results = DBConnection.execute(<<-SQL)
+      SELECT
+        #{table_name}.*
+      FROM
+        #{table_name}
     SQL
 
-    all_rows.each do |hashes|
-      hashes.symbolize_keys!
-    end
-
-    self.parse_all(all_rows)
+    parse_all(results)
   end
 
   def self.parse_all(results)

@@ -7,5 +7,3 @@ class AttrAccessorObject
     end
   end
 end
-
-# had to google a lot...
